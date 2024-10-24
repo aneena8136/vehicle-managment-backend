@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  phone          String    @unique
+  city           String
+  state          String
+  country        String
+  pincode        String
+  password       String
+  profilePicture String? // Optional field for profile picture
+  bookings       Booking[] @relation("CustomerBookings") // Add relation field
+}
+
+
+
+model Vehicle {
+  id             Int            @id @default(autoincrement())
+  name           String
+ manufacturer   String
+  model          String // New field for Model
+  fuelType       FuelType // Enum for Fuel Type
+  gearType       GearType // Enum for Gear Type
+  seats          Int // Number of seats
+  price          Float
+  primaryImage   String // Store URL or file path
+  secondaryImage String // Store URL or file path
+   otherImages    String[]  
+  availableQty   Int
+  createdAt      DateTime       @default(now())
+  bookings       Booking[]      @relation("VehicleBookings") // Add relation field
+  scheduledJobs  ScheduledJob[] @relation("VehicleScheduledJobs") // Ensure this is set correctly   
+}
+
+model Booking {
+  id              Int             @id @default(autoincrement())
+  customerId      Int
+  vehicleId       Int
+  pickupLocation  PickupLocation
+  dropoffLocation DropoffLocation
+  pickupTime      DateTime
+  dropoffTime     DateTime
+  status          BookingStatus   @default(PENDING)
+  createdAt       DateTime        @default(now())
+  totalPrice      Float
+  customer        Customer        @relation("CustomerBookings", fields: [customerId], references: [id]) // Update relation field
+  vehicle         Vehicle         @relation("VehicleBookings", fields: [vehicleId], references: [id]) // Update relation field
+}
+
+// Enum for Fuel Types
+enum FuelType {
+  PETROL
+  DIESEL
+  CNG
+  EV
+}
+
+// Enum for Gear Types
+enum GearType {
+  MANUAL
+  AUTOMATIC
+}
+
+// Enum for Pickup Locations
+enum PickupLocation {
+  KOCHI
+  THRISSUR
+  ANGAMALY
+}
+
+// Enum for Dropoff Locations
+enum DropoffLocation {
+  KOCHI
+  THRISSUR
+  ANGAMALY
+}
+
+// Enum for Booking Status
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum Currency {
+  INR
+}
+
+model ScheduledJob {
+  id            Int      @id @default(autoincrement())
+  vehicleId     Int
+  jobType       String
+  scheduledTime DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  vehicle Vehicle @relation("VehicleScheduledJobs", fields: [vehicleId], references: [id]) // Ensure this matches the Vehicle relation
+}
+
+
+model OTP {
+  id          Int      @id @default(autoincrement())
+  phoneNumber String   
+  otp         String
+  createdAt   DateTime @default(now())
+}
